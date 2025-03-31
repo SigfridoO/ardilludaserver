@@ -2,6 +2,11 @@
 
 gunicorn --bind 0.0.0.0:8000 ardilluda.wsgi
 
+
+Probar
+
+/var/www/public/venv/bin/gunicorn --bind 0.0.0.0:8000 ardilluda.wsgi --chdir /var/www/public/ardilludaserver
+
 ## Crear el archivo
 
 sudo nano /etc/systemd/system/gunicorn.socket
@@ -42,7 +47,7 @@ ExecStart=/var/www/public/venv/bin/gunicorn \
 WantedBy=multi-user.target
 
 
-//// Ejecutar 
+##################################### Ejecutar 
 sudo systemctl start gunicorn.socket
 sudo systemctl enable gunicorn.socket
 
@@ -52,4 +57,34 @@ sudo systemctl daemon-reload
 sudo systemctl restart gunicorn
 
 
-/var/www/public/venv/bin/gunicorn --bind 0.0.0.0:8000 ardilluda.wsgi --chdir /var/www/public/ardilludaserver
+instalar 
+sudo apt install nginx
+
+sudo nano /etc/nginx/sites-available/proyectosdeingenieriaitiz
+###########################################################
+server {
+    listen 80;
+    server_name proyectosdeingenieriaitiz.com www.proyectosdeingenieriaitiz.com;
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location /static/ {
+        root /var/www/public/ardilludaserver;
+    }
+
+    location / {
+        include proxy_params;
+        proxy_pass http://unix:/run/gunicorn.sock;
+    }
+}
+
+
+###############
+Ejecutar 
+sudo ln -s /etc/nginx/sites-available/proyectosdeingenieriaitiz /etc/nginx/sites-enabled
+
+sudo nginx -t
+
+sudo systemctl restart nginx
+
+sudo ufw delete allow 8000
+sudo ufw allow 'Nginx Full'

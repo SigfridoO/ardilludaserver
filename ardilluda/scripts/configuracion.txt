@@ -1,0 +1,55 @@
+## En la carpeta del proyecto ejecutar
+
+gunicorn --bind 0.0.0.0:8000 ardilluda.wsgi
+
+## Crear el archivo
+
+sudo nano /etc/systemd/system/gunicorn.socket
+
+####################################### /etc/systemd/system/gunicorn.socket
+[Unit]
+Description=gunicorn socket
+
+[Socket]
+ListenStream=/run/gunicorn.sock
+
+[Install]
+WantedBy=sockets.target
+
+
+## Crear el archivo
+
+sudo nano /etc/systemd/system/gunicorn.service
+
+###################################### /etc/systemd/system/gunicorn.service
+
+[Unit]
+Description=gunicorn daemon
+Requires=gunicorn.socket
+After=network.target
+
+[Service]
+User=root
+Group=www-data
+WorkingDirectory=/var/www/public/ardilludaserver
+ExecStart=/var/www/public/venv/bin/gunicorn \
+          --access-logfile - \
+          --workers 3 \
+          --bind unix:/run/gunicorn.sock \
+          ardilluda.wsgi:application
+
+[Install]
+WantedBy=multi-user.target
+
+
+//// Ejecutar 
+sudo systemctl start gunicorn.socket
+sudo systemctl enable gunicorn.socket
+
+sudo systemctl status gunicorn.socket
+
+sudo systemctl daemon-reload
+sudo systemctl restart gunicorn
+
+
+/var/www/public/venv/bin/gunicorn --bind 0.0.0.0:8000 ardilluda.wsgi --chdir /var/www/public/ardilludaserver
